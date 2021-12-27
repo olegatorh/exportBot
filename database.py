@@ -1,18 +1,20 @@
 import sqlite3
+import re
 
 try:
-    sqlite_connection = sqlite3.connect('../telegram_bot.db', isolation_level=None)
+    sqlite_connection = sqlite3.connect('./bot.db', isolation_level=None)
     cursor = sqlite_connection.cursor()
     print("База данных подключена к SQLite")
 
-    sqlite_create_table_query = '''CREATE TABLE users (
+    cursor.execute('''CREATE TABLE users (
                                        id INTEGER PRIMARY KEY AUTOINCREMENT,
                                        name TEXT NOT NULL,
                                        joining_date datetime NOT NULL,
-                                       telegram_id TEXT NOT NULL
-                                       );'''
-    cursor.execute(sqlite_create_table_query)
+                                       telegram_id TEXT NOT NULL,
+                                       admin boolean default FALSE
+                                       );''')
     sqlite_connection.commit()
+
 
 except sqlite3.Error as error:
     print("Ошибка при подключении к sqlite", error)
@@ -22,16 +24,25 @@ finally:
 
 
 def add_new_user(message):
-    user = cursor.execute("SELECT id, name FROM users WHERE name = ?",
-                          (message['new_chat_members'][0].username,)).fetchone()
+    user = cursor.execute(f"SELECT name FROM users WHERE telegram_id = {message['new_chat_members'][0].id}").fetchone()
     if user is None:
         cursor.execute("INSERT OR IGNORE INTO users (name, joining_date, telegram_id) VALUES (?, ?, ?)",
-                       (message['new_chat_members'][0].username,
-                        message.date.strftime('%Y-%m-%d'),
+                       (message['new_chat_members'][0].username if message['new_chat_members'][0].username is not None
+                        else message['new_chat_members'][0].first_name, message.date.strftime('%Y-%m-%d'),
                         message['new_chat_members'][0].id))
-        return f"{message['new_chat_members'][0].username} added!"
+        return f"""{message['new_chat_members'][0].username if message['new_chat_members'][0].username is not None
+        else message['new_chat_members'][0].first_name} added!"""
     else:
         return f"{user} already in database!"
+
+
+def delete_user(message):
+    user = cursor.execute(f"SELECT name FROM users WHERE telegram_id = {message['left_chat_member'].id}").fetchone()
+    if user is None:
+        return f"there is no user with this {message['left_chat_member'].id} id"
+    else:
+        cursor.execute(f"DELETE FROM users WHERE telegram_id = {message['left_chat_member'].id}").fetchone()
+        return f"{re.sub(',', '', str(user))} deleted"
 
 
 def get_users_info():
@@ -44,10 +55,10 @@ def get_users_id():
     return users_id
 
 
-def delete_user(user_id):
-    user = cursor.execute("SELECT id, name FROM users WHERE id = ?", (user_id,)).fetchone()
-    if user is None:
-        return f"there is no user with this {user_id}-id"
-    else:
-        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,)).fetchone()
-        return f"{user} deleted"
+def get_user_by_id(user_id):
+    return cursor.execute("SELECT * FROM users WHERE telegram_id = ?", [user_id]).fetchone()
+
+
+def update_user_settings(column, value, telegram_id):
+    cursor.execute(f"UPDATE OR IGNORE users SET {column} = {value} WHERE telegram_id = {telegram_id}").fetchone()
+    return "адміна добавлено"
