@@ -24,6 +24,16 @@ def load():
         data = json.load(json_file)
     return data
 
+def loadFormater(data):
+    short_data = []
+    for i in data:
+        if type(i["category_data"]) == str:
+            short_data.append(i["category_data"])
+        else:
+            for x in i["category_data"]:
+                short_data.append(x["category_data"])
+    return short_data
+
 
 @dp.message_handler(commands=['list_users'])
 async def get_users(message: types.Message):
@@ -36,7 +46,21 @@ async def get_users(message: types.Message):
     else:
         await message.reply(f'у вас немає доступу!')
 
-
+        
+@dp.message_handler(commands="find")
+async def find(message: types.message):
+    message_info = message.text.split(" ", 1)[1].rsplit(" ", 1)[0]
+    print(message_info)
+    shortdata = loadFormater(load())
+    for i in shortdata:
+        if message_info in i:
+            if len(i) > 4096:
+                for x in range(0, len(i), 4096):
+                    await message.reply(i[x:x + 4096], parse_mode='HTML')
+            else:
+                await message.reply(i, parse_mode='HTML')
+        
+        
 @dp.message_handler(commands=['add_admin'])
 async def add_admin(message: types.Message):
     user_id = message.text.split(' ')[1]
