@@ -25,15 +25,18 @@ finally:
 
 def add_new_user(message):
     user = cursor.execute(f"SELECT name FROM users WHERE telegram_id = {message['new_chat_members'][0].id}").fetchone()
-    if user is None:
+    print(f'user in database - {user}')
+    if user is None and message["from"].is_bot is False:
         cursor.execute("INSERT OR IGNORE INTO users (name, joining_date, telegram_id) VALUES (?, ?, ?)",
                        (message['new_chat_members'][0].username if message['new_chat_members'][0].username is not None
                         else message['new_chat_members'][0].first_name, message.date.strftime('%Y-%m-%d'),
                         message['new_chat_members'][0].id))
         return f"""{message['new_chat_members'][0].username if message['new_chat_members'][0].username is not None
         else message['new_chat_members'][0].first_name} added!"""
+    elif user:
+        return f"{user} вже існує в базі!"
     else:
-        return f"{user} already in database!"
+        return f"не може бути добавлено!"
 
 
 def delete_user(message):
