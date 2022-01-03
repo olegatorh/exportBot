@@ -7,12 +7,36 @@ try:
     print("База данных подключена к SQLite")
 
     cursor.execute('''CREATE TABLE users (
-                                       id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                       user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                                        name TEXT NOT NULL,
                                        joining_date datetime NOT NULL,
                                        telegram_id TEXT NOT NULL,
                                        admin boolean default FALSE
                                        );''')
+
+    cursor.execute('''CREATE TABLE keyboards (
+                                           keyboard_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                           keyboard_name TEXT NOT NULL,
+                                           date datetime NOT NULL
+                                           );''')
+
+    cursor.execute('''CREATE TABLE categories (
+                                           category_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                           category_name TEXT NOT NULL,
+                                           keyboard_list INTEGER,
+                                           date datetime NOT NULL,
+                                           FOREIGN KEY(keyboard_list) REFERENCES keyboards(keyboard_id)
+
+                                           );''')
+
+    cursor.execute('''CREATE TABLE categoriesData (
+                                               data_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                               info_name TEXT,
+                                               info_data TEXT,
+                                               category_id INTEGER,
+                                               date datetime NOT NULL,
+                                               FOREIGN KEY(category_id) REFERENCES categories(category_id)
+                                               );''')
     sqlite_connection.commit()
 
 
@@ -37,6 +61,32 @@ def add_new_user(message):
         return f"{user} вже існує в базі!"
     else:
         return f"не може бути добавлено!"
+<<<<<<< HEAD
+
+
+def add_new_keyboard(message):
+    message_info = message.text.split(' ', 1)[1]
+    cursor.execute(f"INSERT INTO keyboards (keyboard_name, date) VALUES (?, ?)",
+                   (message_info, message.date.strftime('%Y-%m-%d'),)).fetchone()
+    return "Добавлено нову клавіатуру!"
+
+
+def add_new_category(message):
+    message_info = message.text.split(' ', 2)
+    print(message_info)
+    cursor.execute(f"INSERT INTO categories (category_name, keyboard_list, date) VALUES (?, ?, ?)",
+                   (message_info[1], message_info[2], message.date.strftime('%Y-%m-%d'),)).fetchone()
+    return "Добавлено нову категорію!"
+
+
+def add_new_category_data(message):
+    message_info = message.text.split(' ', 2)
+    print(message_info)
+    cursor.execute(f"INSERT INTO categoriesData (info_name, info_data, category_id, date) VALUES (?, ?, ?, ?)",
+                   (message_info[1], message_info[2], message.date.strftime('%Y-%m-%d'),)).fetchone()
+    return "Добавлено нову категорію!"
+=======
+>>>>>>> 406bf491d317a16973b2d2e5f8c50b1382a8bae5
 
 
 def delete_user(message):
