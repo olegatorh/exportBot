@@ -61,7 +61,7 @@ def add_new_user(message):
         return f"{user} вже існує в базі!"
     else:
         return f"не може бути добавлено!"
-<<<<<<< HEAD
+
 
 
 def add_new_keyboard(message):
@@ -85,8 +85,7 @@ def add_new_category_data(message):
     cursor.execute(f"INSERT INTO categoriesData (info_name, info_data, category_id, date) VALUES (?, ?, ?, ?)",
                    (message_info[1], message_info[2], message.date.strftime('%Y-%m-%d'),)).fetchone()
     return "Добавлено нову категорію!"
-=======
->>>>>>> 406bf491d317a16973b2d2e5f8c50b1382a8bae5
+
 
 
 def delete_user(message):
